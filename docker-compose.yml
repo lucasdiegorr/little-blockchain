@@ -1,0 +1,55 @@
+version: "3"
+services: 
+    miner:
+        container_name: miner
+        image: miner
+        environment: 
+            - RABBITMQ_HOST=rabbitmq
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_QUEUE=transation_queue
+            - HASH_DIFFICULT=0000
+            - BLOCKCHAIN_HOST=blockchain
+            - BLOCKCHAIN_SERVICE=http://blockchain:5000/blockchain
+        build:
+            context: ./miner/
+        links: 
+            - rabbitmq
+            - blockchain
+        depends_on: 
+            - rabbitmq
+    blockchain:
+        container_name: blockchain
+        image: blockchain
+        environment: 
+            - RABBITMQ_HOST=rabbitmq
+            - RABBITMQ_PORT=5672
+            - RABBITMQ_QUEUE=transation_queue
+            - MARIADB_HOST=mysql
+            - MARIADB_PORT=3306
+            - MARIADB_USER=root
+            - MARIADB_PASSWORD=Password123!
+            - MARIADB_DATABASE=blockchain
+        build:
+            context: ./blockchain/
+        ports: 
+            - 5000:5000
+        links: 
+            - mysql
+            - rabbitmq
+        depends_on: 
+            - mysql
+            - rabbitmq
+    rabbitmq:
+        container_name: rabbitmq
+        image: rabbitmq:3.6-management-alpine
+        ports: 
+            - 5672:5672
+            - 15672:15672
+    mysql:
+        container_name: mysql
+        image: blockchain-database
+        environment: 
+            - MYSQL_DATABASE=blockchain
+            - MYSQL_ROOT_PASSWORD=Password123!
+        ports: 
+            - 3306:3306
